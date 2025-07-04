@@ -171,7 +171,7 @@
         const response = await fetch('/api/submit_ticket', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(ticketData)
+          body: JSON.stringify(ticket)
         });
 
         if (!response.ok) throw new Error('Submission failed');
