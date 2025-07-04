@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickAid - Submit Helpdesk Ticket</title>
+  <link rel="icon" href="images/graduation.png" type="image/png" />
+  <style>
+    :root {
+      --primary: #6a1b9a;
+      --light-bg: #f8f9fa;
+      --dark-text: #2e2e2e;
+      --white: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      /* background-color: var(--light-bg); */
+      background: url('images/students-bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--dark-text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 999;
+      max-width: 90%;
+      font-size: 15px;
+    }
+
+    .toast.success {
+      border-left: 6px solid #4caf50;
+      color: #256029;
+      background-color: #e8f5e9;
+    }
+
+    .toast.error {
+      border-left: 6px solid #f44336;
+      color: #b71c1c;
+      background-color: #ffebee;
+    }
+
+    .form-container {
+      background-color: var(--white);
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      margin-top: 18px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #4a148c;
+    }
+
+    @media (max-width: 600px) {
+      .form-container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="form-container">
+    <h1>QuickAid<br>Smart Campus Helpdesk</h1>
+    <form id="ticketForm">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" required placeholder="student@example.com"/>
+
+      <label for="title">Issue Title</label>
+      <input type="text" id="title" required placeholder="e.g. Broken projector"/>
+
+      <label for="category">Category</label>
+      <select id="category" required>
+        <option value="">-- Select Category --</option>
+        <option value="IT Support">IT Support</option>
+        <option value="Facility Maintenance">Facility Maintenance</option>
+        <option value="Lost & Found">Lost & Found</option>
+        <option value="Academic Assistance">Academic Assistance</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="description">Description</label>
+      <textarea id="description" rows="4" required placeholder="Provide details about the issue..."></textarea>
+
+      <button type="submit">Submit Ticket</button>
+    </form>
+  </div>
+
+  <script>
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 5000);
+    }
+
+    document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const ticket = {
+        email: document.getElementById('email').value,
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value
+      };
+
+      try {
+        const response = await fetch('/api/submit_ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ticket)
+        });
+
+        if (!response.ok) throw new Error('Submission failed');
+
+        const result = await response.json();
+        showToast(`✅ Ticket submitted! ID: ${result.id}`, 'success');
+        document.getElementById('ticketForm').reset();
+      } catch (error) {
+        showToast('❌ Error submitting ticket. Please try again.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

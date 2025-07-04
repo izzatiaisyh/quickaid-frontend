@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QuickAid - Track Helpdesk Ticket</title>
+  <link rel="icon" href="images/graduation.png" type="image/png" />
+  <style>
+    :root {
+      --primary: #6a1b9a;
+      --background: #f4f6f9;
+      --white: #ffffff;
+      --card-bg: #f8f5fc;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      /* background-color: var(--background); */
+      background: url('images/students-bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 999;
+      max-width: 90%;
+      font-size: 15px;
+    }
+
+    .toast.error {
+      border-left: 6px solid #c62828;
+      color: #b71c1c;
+      background-color: #ffebee;
+    }
+
+    .header {
+      text-align: center;
+      padding: 30px 20px 10px;
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    .input-section {
+      max-width: 500px;
+      margin: 0 auto 20px;
+      text-align: center;
+    }
+
+    input[type="email"] {
+      width: 70%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px 18px;
+      margin-left: 8px;
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4a148c;
+    }
+
+    .kanban {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .column {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 16px;
+      width: 300px;
+      min-height: 300px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column h3 {
+      margin-top: 0;
+      color: var(--primary);
+      text-align: center;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .ticket-card {
+      background-color: var(--card-bg);
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .ticket-card small {
+      display: block;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .kanban {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .input-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      input[type="email"], button {
+        width: 100%;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Message -->
+  <div id="toast" class="toast error"></div>
+
+  <div class="header">
+    <h1>Track Helpdesk Ticket</h1>
+    <div class="input-section">
+      <input type="email" id="emailInput" placeholder="Enter your email" required />
+      <button onclick="getTickets()">Track</button>
+    </div>
+  </div>
+
+  <div class="kanban">
+    <div class="column" id="newColumn">
+      <h3>🆕 New</h3>
+    </div>
+    <div class="column" id="inProgressColumn">
+      <h3>🔧 In Progress</h3>
+    </div>
+    <div class="column" id="resolvedColumn">
+      <h3>✅ Resolved</h3>
+    </div>
+  </div>
+
+  <script>
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 5000);
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    async function getTickets() {
+      const email = document.getElementById("emailInput").value.trim();
+
+      document.getElementById("newColumn").innerHTML = "<h3>🆕 New</h3>";
+      document.getElementById("inProgressColumn").innerHTML = "<h3>🔧 In Progress</h3>";
+      document.getElementById("resolvedColumn").innerHTML = "<h3>✅ Resolved</h3>";
+
+      if (!email || !isValidEmail(email)) {
+        showToast("Please enter a valid email address.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/get_tickets?email=${encodeURIComponent(email)}`);
+        if (!res.ok) throw new Error("Failed to fetch tickets.");
+        const tickets = await res.json();
+
+        if (tickets.length === 0) {
+          showToast("No tickets found for this email.");
+          return;
+        }
+
+        tickets.forEach(ticket => {
+          const card = document.createElement("div");
+          card.className = "ticket-card";
+          card.innerHTML = `
+            <small>ID: ${ticket.id}</small>
+            <strong>${ticket.title}</strong>
+            <br><small>Category: ${ticket.category}</small>
+            <br><small>Status: ${ticket.status}</small>
+            `;
+
+
+          const status = ticket.status.toLowerCase();
+          if (status === "new") {
+            document.getElementById("newColumn").appendChild(card);
+          } else if (status === "in progress") {
+            document.getElementById("inProgressColumn").appendChild(card);
+          } else {
+            document.getElementById("resolvedColumn").appendChild(card);
+          }
+        });
+      } catch (err) {
+        showToast("An error occurred while retrieving tickets.");
+      }
+    }
+  </script>
+
+</body>
+</html>
