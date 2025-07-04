@@ -1,12 +1,11 @@
 {
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
   "routes": [
     {
       "route": "/api/*",
-      "rewrite": "/api/*"
-    },
-    {
-      "route": "/*",
-      "rewrite": "https://quickaid-func-cdd9e9chh5gbghe6.southeastasia-01.azurewebsites.net/api/:*"
+      "allowedRoles": ["anonymous"]
     }
   ]
 }
